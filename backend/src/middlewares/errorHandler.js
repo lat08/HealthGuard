@@ -38,8 +38,8 @@ const errorHandler = (err, req, res, _next) => {
     success: false,
     statusCode,
     message,
-    ...(errors.length && { errors }),
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(errors.length && { errors }),
   });
 };
 

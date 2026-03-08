@@ -78,4 +78,34 @@ async function sendPasswordChangedEmail(to, userName) {
   });
 }
 
-module.exports = { sendPasswordResetEmail, sendPasswordChangedEmail };
+/**
+ * Gửi email thông báo tài khoản bị khóa (UC 5.c.4)
+ * @param {string} to - Email người nhận
+ * @param {string} userName - Tên người dùng
+ */
+async function sendAccountLockedEmail(to, userName) {
+  if (!env.EMAIL_USER || !env.EMAIL_PASS) {
+    console.warn('⚠️  Email chưa được cấu hình. Skipping account locked notification.');
+    return;
+  }
+
+  await transporter.sendMail({
+    from: env.EMAIL_FROM,
+    to,
+    subject: 'HealthGuard — Tài khoản đã bị khóa',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">HealthGuard</h2>
+        <p>Xin chào ${userName},</p>
+        <p>Tài khoản của bạn đã bị <strong style="color: #dc2626;">khóa</strong> bởi quản trị viên.</p>
+        <p>Bạn sẽ không thể đăng nhập cho đến khi tài khoản được mở khóa.</p>
+        <p style="color: #6b7280; font-size: 14px;">
+          Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ quản trị viên hệ thống.<br>
+          Thời gian: ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
+        </p>
+      </div>
+    `,
+  });
+}
+
+module.exports = { sendPasswordResetEmail, sendPasswordChangedEmail, sendAccountLockedEmail };

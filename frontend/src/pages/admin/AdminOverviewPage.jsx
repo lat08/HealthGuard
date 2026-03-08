@@ -51,8 +51,8 @@ const AdminOverviewPage = () => {
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${bgColor} ${textColor} shadow-inner`}>
                 {icon}
               </div>
-              <div className={`flex items-center gap-1 text-[13px] font-bold ${isUp ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {isUp ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+              <div className={`flex items-center gap-1.5 text-lg font-black ${isUp ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {isUp ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                 {trend}
               </div>
             </div>
