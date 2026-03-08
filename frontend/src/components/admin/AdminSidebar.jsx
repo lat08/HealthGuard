@@ -1,9 +1,10 @@
-import { LayoutDashboard, Users, Heart } from 'lucide-react';
+import { LayoutDashboard, Users, Heart, Smartphone } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const NAV_ITEMS = [
   { path: '/admin/overview', label: 'Tổng quan', icon: <LayoutDashboard size={20} /> },
   { path: '/admin/users', label: 'Quản lý người dùng', icon: <Users size={20} /> },
+  { path: '/admin/devices', label: 'Quản lý thiết bị', icon: <Smartphone size={20} /> },
 ];
 
 const AdminSidebar = () => {
