@@ -7,6 +7,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminOverviewPage from './pages/admin/AdminOverviewPage';
 import UserManagementPage from './pages/admin/UserManagementPage';
+import DeviceManagementPage from './pages/admin/DeviceManagementPage';
 import './App.css';
 
 function ProtectedRoute({ children }) {
@@ -90,6 +91,7 @@ function App() {
         <Route index element={<Navigate to="/admin/overview" replace />} />
         <Route path="overview" element={<AdminOverviewPage />} />
         <Route path="users" element={<UserManagementPage />} />
+        <Route path="devices" element={<DeviceManagementPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

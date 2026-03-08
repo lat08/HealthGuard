@@ -5,6 +5,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 const PAGE_TITLES = {
   '/admin/overview': 'Tổng quan hệ thống',
   '/admin/users': 'Quản lý người dùng',
+  '/admin/devices': 'Quản lý thiết bị',
 };
 
 const AdminLayout = ({ onLogout }) => {
