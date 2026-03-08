@@ -238,6 +238,35 @@ npm run test -- settings.service.test.js
 
 ---
 
+## PHẦN 3: CẬP NHẬT CẤU TRÚC DATABASE (PRISMA MIGRATIONS)
+
+Khi tạo một module mới mà cần **thêm bảng mới** hoặc **thêm cột** vào bảng cũ, bạn cần thực hiện theo các bước sau để đảm bảo dự án đồng bộ:
+
+### Bước 1: Cập nhật Schema
+Chỉnh sửa file `backend/prisma/schema.prisma` để thêm Model hoặc Field mới.
+
+### Bước 2: Tạo Migration
+Chạy lệnh sau để Prisma tự động so sánh và tạo file SQL thay đổi:
+```bash
+npx prisma migrate dev --name add_new_table_or_column
+```
+*Lệnh này sẽ:*
+1. Tạo file SQL trong thư mục `prisma/migrations`.
+2. Cập nhật database local của bạn.
+3. Cập nhật Prisma Client để bạn có thể code với các trường mới ngay lập tức.
+
+### Bước 3: Đồng bộ SQL Script sang PM_REVIEW (Quy trình bắt buộc)
+Để đảm bảo PM và AI Reviewer có thể kiểm soát thay đổi Database, mọi thay đổi cấu trúc từ Prisma **PHẢI** được copy sang thư mục quản lý tập trung trong workspace `PM_REVIEW`:
+
+1. **Lấy nội dung SQL**: Sau khi chạy lệnh migrate ở Bước 2, hãy mở file vừa sinh ra tại: `SQL_SCRIPTS/<stt>_<tên_migration>.sql`.
+2. **Xác định số thứ tự**: Truy cập vào thư mục `PM_REVIEW/SQL SCRIPTS/` để kiểm tra số thứ tự lớn nhất hiện tại (Ví dụ hiện tại đang là `11_...`).
+3. **Tạo file script mới**: 
+   - Tạo file mới với định dạng: `XX_tên_mô_tả_ngắn_gọn.sql`.
+   - *Ví dụ:* `12_create_module_settings.sql` hoặc `13_add_column_to_users.sql`.
+4. **Lưu nội dung**: Dán toàn bộ mã SQL từ file `migration.sql` vào file mới này. Điều này giúp hệ thống Review tự động nắm bắt được sự thay đổi của bảng và cột.
+
+---
+
 ## DANH SÁCH KIỂM TRA (CHECKLIST) KHI VIẾT API CỦA TEAM:
 
 - [ ] Cổng nhận liệu (`req.body`, `req.query`, `req.params`) đã có Validator chặn rác.
