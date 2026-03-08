@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, UserPlus, Search, Loader2 } from 'lucide-react';
+import { UserPlus, Search, Loader2 } from 'lucide-react';
 import Modal from '../ui/Modal';
 import userService from '../../services/userService';
 
@@ -61,47 +61,46 @@ const AssignDeviceModal = ({ isOpen, onClose, device, onSubmit }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-2xl">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800">Gán thiết bị cho người dùng</h2>
-            <p className="text-sm text-slate-500 mt-1">
-              Thiết bị: <span className="font-bold text-slate-700">{device?.device_name || 'Chưa đặt tên'}</span>
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
-          >
-            <X size={20} />
-          </button>
+    <Modal isOpen={isOpen} onClose={onClose} title="Gán thiết bị cho người dùng" size="lg">
+      <div className="space-y-6">
+        {/* Device Info */}
+        <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Thiết bị</p>
+          <p className="font-bold text-slate-800">{device?.device_name || 'Chưa đặt tên'}</p>
+          {device?.serial_number && (
+            <p className="text-xs text-slate-500 mt-0.5">SN: {device.serial_number}</p>
+          )}
         </div>
 
         {/* Search */}
-        <div className="mb-4">
-          <div className="relative">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm người dùng theo tên hoặc email..."
-              value={searchInput}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
-            />
-          </div>
+        <div className="relative">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Tìm kiếm người dùng theo tên hoặc email..."
+            value={searchInput}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 transition-all"
+          />
         </div>
 
         {/* User List */}
-        <div className="border border-slate-200 rounded-xl overflow-hidden mb-6">
+        <div className="border border-slate-200 rounded-xl overflow-hidden">
           <div className="max-h-[400px] overflow-y-auto">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
+              <div className="flex flex-col items-center justify-center py-16 gap-3">
                 <Loader2 size={32} className="text-indigo-500 animate-spin" />
+                <p className="text-sm text-slate-400 font-medium">Đang tải danh sách...</p>
               </div>
             ) : users.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-sm text-slate-400">Không tìm thấy người dùng phù hợp</p>
+              <div className="flex flex-col items-center justify-center py-16 gap-3">
+                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200">
+                  <UserPlus size={32} />
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-slate-800">Không tìm thấy người dùng</p>
+                  <p className="text-xs text-slate-400 mt-1">Thử điều chỉnh từ khóa tìm kiếm</p>
+                </div>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
@@ -109,11 +108,11 @@ const AssignDeviceModal = ({ isOpen, onClose, device, onSubmit }) => {
                   <button
                     key={user.id}
                     onClick={() => setSelectedUser(user)}
-                    className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-all text-left ${
-                      selectedUser?.id === user.id ? 'bg-indigo-50 border-l-4 border-indigo-500' : ''
+                    className={`w-full px-4 py-3.5 flex items-center gap-3 hover:bg-slate-50 transition-all text-left ${
+                      selectedUser?.id === user.id ? 'bg-indigo-50/50 border-l-4 border-indigo-500' : ''
                     }`}
                   >
-                    <div className="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 text-xs font-bold shrink-0">
+                    <div className="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 text-sm font-bold shrink-0">
                       {(user.fullName || user.full_name || 'U').charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -135,21 +134,27 @@ const AssignDeviceModal = ({ isOpen, onClose, device, onSubmit }) => {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-all active:scale-95"
+            disabled={isSubmitting}
+            className="px-6 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Hủy
           </button>
           <button
             onClick={handleSubmit}
             disabled={!selectedUser || isSubmitting}
-            className="px-5 py-2.5 bg-indigo-500 text-white text-sm font-bold rounded-xl hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 flex items-center gap-2"
+            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <UserPlus size={16} />
-            {isSubmitting ? 'Đang gán...' : 'Gán thiết bị'}
+            {isSubmitting && <Loader2 size={16} className="animate-spin" />}
+            {isSubmitting ? 'Đang gán...' : (
+              <>
+                <UserPlus size={16} />
+                Gán thiết bị
+              </>
+            )}
           </button>
         </div>
       </div>
