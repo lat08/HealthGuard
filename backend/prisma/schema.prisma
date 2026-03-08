@@ -1,0 +1,355 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model alerts {
+  id              Int          @id @default(autoincrement())
+  uuid            String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         Int
+  device_id       Int?
+  alert_type      String       @db.VarChar(50)
+  title           String       @db.VarChar(255)
+  message         String?
+  severity        String?      @default("medium") @db.VarChar(20)
+  fall_event_id   Int?
+  sos_event_id    Int?
+  data            Json?
+  sent_at         DateTime?    @db.Timestamptz(6)
+  delivered_at    DateTime?    @db.Timestamptz(6)
+  read_at         DateTime?    @db.Timestamptz(6)
+  acknowledged_at DateTime?    @db.Timestamptz(6)
+  sent_via        String[]     @default(["push"])
+  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  expires_at      DateTime?    @db.Timestamptz(6)
+  devices         devices?     @relation(fields: [device_id], references: [id], onUpdate: NoAction)
+  fall_events     fall_events? @relation(fields: [fall_event_id], references: [id], onUpdate: NoAction)
+  sos_events      sos_events?  @relation(fields: [sos_event_id], references: [id], onUpdate: NoAction)
+  users           users        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([device_id, created_at(sort: Desc)], map: "idx_alerts_device")
+  @@index([alert_type, created_at(sort: Desc)], map: "idx_alerts_type")
+  @@index([user_id, created_at(sort: Desc)], map: "idx_alerts_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model audit_logs {
+  id            BigInt   @default(autoincrement())
+  time          DateTime @default(now()) @db.Timestamptz(6)
+  user_id       Int?
+  device_id     Int?
+  action        String   @db.VarChar(100)
+  resource_type String?  @db.VarChar(50)
+  resource_id   Int?
+  details       Json?
+  ip_address    String?  @db.Inet
+  user_agent    String?
+  status        String?  @db.VarChar(20)
+  error_message String?
+  devices       devices? @relation(fields: [device_id], references: [id], onUpdate: NoAction)
+  users         users?   @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+
+  @@id([id, time])
+  @@index([time(sort: Desc)])
+  @@index([action, time(sort: Desc)], map: "idx_audit_logs_action")
+  @@index([resource_type, resource_id, time(sort: Desc)], map: "idx_audit_logs_resource")
+  @@index([status, time(sort: Desc)], map: "idx_audit_logs_status")
+  @@index([user_id, time(sort: Desc)], map: "idx_audit_logs_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model devices {
+  id               Int           @id @default(autoincrement())
+  uuid             String        @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id          Int
+  device_name      String?       @db.VarChar(100)
+  device_type      String?       @default("smartwatch") @db.VarChar(50)
+  model            String?       @db.VarChar(100)
+  firmware_version String?       @db.VarChar(20)
+  mac_address      String?       @db.VarChar(17)
+  serial_number    String?       @db.VarChar(100)
+  is_active        Boolean?      @default(true)
+  battery_level    Int?          @db.SmallInt
+  signal_strength  Int?          @db.SmallInt
+  last_seen_at     DateTime?     @db.Timestamptz(6)
+  last_sync_at     DateTime?     @db.Timestamptz(6)
+  mqtt_client_id   String?       @db.VarChar(100)
+  calibration_data Json?
+  registered_at    DateTime?     @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?     @default(now()) @db.Timestamptz(6)
+  deleted_at       DateTime?     @db.Timestamptz(6)
+  alerts           alerts[]
+  audit_logs       audit_logs[]
+  users            users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  fall_events      fall_events[]
+  motion_data      motion_data[]
+  risk_scores      risk_scores[]
+  sos_events       sos_events[]
+  vitals           vitals[]
+
+  @@index([last_seen_at(sort: Desc)], map: "idx_devices_last_seen")
+  @@index([mqtt_client_id], map: "idx_devices_mqtt_client")
+  @@index([user_id], map: "idx_devices_user")
+  @@index([uuid], map: "idx_devices_uuid")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model emergency_contacts {
+  id              Int       @id @default(autoincrement())
+  user_id         Int
+  name            String    @db.VarChar(100)
+  phone           String    @db.VarChar(20)
+  relationship    String?   @db.VarChar(50)
+  priority        Int?      @default(1) @db.SmallInt
+  notify_via_sms  Boolean?  @default(true)
+  notify_via_call Boolean?  @default(false)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  users           users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id, priority], map: "idx_emergency_contacts_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model fall_events {
+  id                Int          @id @default(autoincrement())
+  uuid              String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  device_id         Int
+  detected_at       DateTime     @db.Timestamptz(6)
+  confidence        Decimal      @db.Decimal(4, 3)
+  model_version     String?      @db.VarChar(20)
+  latitude          Decimal?     @db.Decimal(10, 8)
+  longitude         Decimal?     @db.Decimal(11, 8)
+  location_accuracy Float?       @db.Real
+  address           String?
+  user_notified_at  DateTime?    @db.Timestamptz(6)
+  user_responded_at DateTime?    @db.Timestamptz(6)
+  user_cancelled    Boolean?     @default(false)
+  cancel_reason     String?      @db.VarChar(255)
+  sos_triggered     Boolean?     @default(false)
+  sos_triggered_at  DateTime?    @db.Timestamptz(6)
+  features          Json?
+  created_at        DateTime?    @default(now()) @db.Timestamptz(6)
+  alerts            alerts[]
+  devices           devices      @relation(fields: [device_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sos_events        sos_events[]
+
+  @@index([confidence(sort: Desc)], map: "idx_fall_events_confidence")
+  @@index([device_id, detected_at(sort: Desc)], map: "idx_fall_events_device")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model motion_data {
+  time          DateTime @db.Timestamptz(6)
+  device_id     Int
+  accel_x       Float?   @db.Real
+  accel_y       Float?   @db.Real
+  accel_z       Float?   @db.Real
+  gyro_x        Float?   @db.Real
+  gyro_y        Float?   @db.Real
+  gyro_z        Float?   @db.Real
+  magnitude     Float?   @db.Real
+  sampling_rate Int?     @default(50) @db.SmallInt
+  devices       devices  @relation(fields: [device_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([device_id, time])
+  @@index([device_id, time(sort: Desc)], map: "idx_motion_device_time")
+  @@index([time(sort: Desc)])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model risk_explanations {
+  id                 Int         @id @default(autoincrement())
+  risk_score_id      Int
+  explanation_text   String
+  feature_importance Json?
+  xai_method         String?     @db.VarChar(50)
+  recommendations    String[]
+  created_at         DateTime?   @default(now()) @db.Timestamptz(6)
+  risk_scores        risk_scores @relation(fields: [risk_score_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([risk_score_id], map: "idx_risk_explanations_score")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model risk_scores {
+  id                Int                 @id @default(autoincrement())
+  user_id           Int
+  device_id         Int?
+  calculated_at     DateTime            @db.Timestamptz(6)
+  risk_type         String              @db.VarChar(50)
+  score             Decimal             @db.Decimal(5, 2)
+  risk_level        String?             @db.VarChar(20)
+  features          Json
+  model_version     String?             @db.VarChar(20)
+  algorithm         String?             @db.VarChar(50)
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  risk_explanations risk_explanations[]
+  devices           devices?            @relation(fields: [device_id], references: [id], onUpdate: NoAction)
+  users             users               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([risk_type, calculated_at(sort: Desc)], map: "idx_risk_scores_type")
+  @@index([user_id, calculated_at(sort: Desc)], map: "idx_risk_scores_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model sos_events {
+  id                                          Int          @id @default(autoincrement())
+  uuid                                        String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fall_event_id                               Int?
+  device_id                                   Int
+  user_id                                     Int
+  trigger_type                                String       @db.VarChar(20)
+  triggered_at                                DateTime     @db.Timestamptz(6)
+  latitude                                    Decimal?     @db.Decimal(10, 8)
+  longitude                                   Decimal?     @db.Decimal(11, 8)
+  address                                     String?
+  status                                      String?      @default("active") @db.VarChar(20)
+  resolved_at                                 DateTime?    @db.Timestamptz(6)
+  resolved_by_user_id                         Int?
+  resolution_notes                            String?
+  created_at                                  DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime?    @default(now()) @db.Timestamptz(6)
+  alerts                                      alerts[]
+  devices                                     devices      @relation(fields: [device_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  fall_events                                 fall_events? @relation(fields: [fall_event_id], references: [id], onUpdate: NoAction)
+  users_sos_events_resolved_by_user_idTousers users?       @relation("sos_events_resolved_by_user_idTousers", fields: [resolved_by_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_sos_events_user_idTousers             users        @relation("sos_events_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([device_id, triggered_at(sort: Desc)], map: "idx_sos_events_device")
+  @@index([fall_event_id], map: "idx_sos_events_fall")
+  @@index([user_id, triggered_at(sort: Desc)], map: "idx_sos_events_user")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model system_metrics {
+  time        DateTime  @db.Timestamptz(6)
+  metric_name String    @db.VarChar(100)
+  value       Float     @db.Real
+  tags        Json?
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@id([metric_name, time])
+  @@index([metric_name, time(sort: Desc)], map: "idx_system_metrics_name")
+  @@index([tags], map: "idx_system_metrics_tags", type: Gin)
+  @@index([time(sort: Desc)])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model user_relationships {
+  id                                           Int       @id @default(autoincrement())
+  patient_id                                   Int
+  caregiver_id                                 Int
+  relationship_type                            String?   @db.VarChar(50)
+  is_primary                                   Boolean?  @default(false)
+  can_view_vitals                              Boolean?  @default(true)
+  can_receive_alerts                           Boolean?  @default(true)
+  can_view_location                            Boolean?  @default(false)
+  created_at                                   DateTime? @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime? @db.Timestamptz(6)
+  users_user_relationships_caregiver_idTousers users     @relation("user_relationships_caregiver_idTousers", fields: [caregiver_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users_user_relationships_patient_idTousers   users     @relation("user_relationships_patient_idTousers", fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([patient_id, caregiver_id], map: "unique_patient_caregiver")
+  @@index([caregiver_id], map: "idx_relationships_caregiver")
+  @@index([patient_id], map: "idx_relationships_patient")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model users {
+  id                                                        Int                  @id @default(autoincrement())
+  uuid                                                      String               @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                                                     String               @unique @db.VarChar(255)
+  password_hash                                             String               @db.VarChar(255)
+  phone                                                     String?              @db.VarChar(20)
+  full_name                                                 String               @db.VarChar(100)
+  date_of_birth                                             DateTime?            @db.Date
+  gender                                                    String?              @db.VarChar(10)
+  avatar_url                                                String?
+  role                                                      String               @default("patient") @db.VarChar(20)
+  is_active                                                 Boolean?             @default(true)
+  is_verified                                               Boolean?             @default(false)
+  blood_type                                                String?              @db.VarChar(5)
+  height_cm                                                 Int?                 @db.SmallInt
+  weight_kg                                                 Decimal?             @db.Decimal(5, 2)
+  medical_conditions                                        String[]
+  medications                                               String[]
+  allergies                                                 String[]
+  language                                                  String?              @default("vi") @db.VarChar(10)
+  timezone                                                  String?              @default("Asia/Ho_Chi_Minh") @db.VarChar(50)
+  created_at                                                DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at                                                DateTime?            @default(now()) @db.Timestamptz(6)
+  last_login_at                                             DateTime?            @db.Timestamptz(6)
+  deleted_at                                                DateTime?            @db.Timestamptz(6)
+  token_version                                             Int                  @default(1)
+  failed_login_attempts                                     Int                  @default(0)
+  locked_until                                              DateTime?            @db.Timestamptz(6)
+  alerts                                                    alerts[]
+  audit_logs                                                audit_logs[]
+  devices                                                   devices[]
+  emergency_contacts                                        emergency_contacts[]
+  risk_scores                                               risk_scores[]
+  sos_events_sos_events_resolved_by_user_idTousers          sos_events[]         @relation("sos_events_resolved_by_user_idTousers")
+  sos_events_sos_events_user_idTousers                      sos_events[]         @relation("sos_events_user_idTousers")
+  user_relationships_user_relationships_caregiver_idTousers user_relationships[] @relation("user_relationships_caregiver_idTousers")
+  user_relationships_user_relationships_patient_idTousers   user_relationships[] @relation("user_relationships_patient_idTousers")
+  password_reset_tokens                                     password_reset_tokens[]
+
+  @@index([created_at(sort: Desc)], map: "idx_users_created_at")
+  @@index([email], map: "idx_users_email")
+  @@index([role], map: "idx_users_role")
+}
+
+model password_reset_tokens {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  token_hash String    @db.VarChar(255)
+  expires_at DateTime  @db.Timestamptz(6)
+  used_at    DateTime? @db.Timestamptz(6)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  ip_address String?   @db.Inet
+  user_agent String?
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([token_hash], map: "idx_password_reset_tokens_hash")
+  @@index([user_id], map: "idx_password_reset_tokens_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model vitals {
+  time               DateTime  @db.Timestamptz(6)
+  device_id          Int
+  heart_rate         Int?      @db.SmallInt
+  spo2               Decimal?  @db.Decimal(4, 2)
+  temperature        Decimal?  @db.Decimal(4, 2)
+  blood_pressure_sys Int?      @db.SmallInt
+  blood_pressure_dia Int?      @db.SmallInt
+  hrv                Int?      @db.SmallInt
+  respiratory_rate   Int?      @db.SmallInt
+  signal_quality     Int?      @db.SmallInt
+  motion_artifact    Boolean?  @default(false)
+  created_at         DateTime? @default(now()) @db.Timestamptz(6)
+  devices            devices   @relation(fields: [device_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([device_id, time])
+  @@index([device_id, time(sort: Desc)], map: "idx_vitals_device_time")
+  @@index([signal_quality], map: "idx_vitals_quality")
+  @@index([time(sort: Desc)])
+}
