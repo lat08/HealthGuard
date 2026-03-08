@@ -22,6 +22,17 @@ const deviceService = {
   },
 
   /**
+   * Tạo thiết bị mới
+   * @param {object} data - { device_name, device_type, model, firmware_version, serial_number, mac_address }
+   */
+  async createDevice(data) {
+    return apiFetch('/api/v1/devices', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
    * Lấy chi tiết 1 thiết bị
    * @param {number} id
    */

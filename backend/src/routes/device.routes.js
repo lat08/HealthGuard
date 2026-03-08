@@ -29,6 +29,17 @@ const router = express.Router();
 // └──────────────────────────────────────────────────────┘
 
 // ── Validation Rules ──────────────────────────────────────
+const createDeviceRules = {
+  body: {
+    device_name: { required: true, type: 'string', sanitize: true },
+    device_type: { required: true, type: 'string', sanitize: true },
+    serial_number: { required: true, type: 'string', sanitize: true },
+    mac_address: { required: true, type: 'string', sanitize: true },
+    model: { type: 'string', sanitize: true },
+    firmware_version: { type: 'string', sanitize: true },
+  },
+};
+
 const assignDeviceRules = {
   body: {
     userId: { required: true, type: 'number' },
@@ -49,6 +60,7 @@ const updateDeviceRules = {
 // Protect all device routes with auth & admin role & rate limit
 router.use(authenticate, requireAdmin, devicesLimiter);
 
+router.post('/', validate(createDeviceRules), deviceController.create);
 router.get('/', deviceController.getAll);
 router.get('/:id', deviceController.getById);
 router.patch('/:id', validate(updateDeviceRules), deviceController.update);

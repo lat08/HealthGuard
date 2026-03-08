@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Smartphone } from 'lucide-react';
+import { RefreshCw, X, CheckCircle2, AlertCircle, Plus } from 'lucide-react';
 import DevicesToolbar from '../../components/devices/DevicesToolbar';
 import DevicesTable from '../../components/devices/DevicesTable';
 import DevicesPagination from '../../components/devices/DevicesPagination';
@@ -7,7 +7,6 @@ import DeviceFormModal from '../../components/devices/DeviceFormModal';
 import AssignDeviceModal from '../../components/devices/AssignDeviceModal';
 import LockDeviceModal from '../../components/devices/LockDeviceModal';
 import UnassignDeviceModal from '../../components/devices/UnassignDeviceModal';
-import AlertModal from '../../components/ui/AlertModal';
 import deviceService from '../../services/deviceService';
 
 const DeviceManagementPage = () => {
@@ -28,11 +27,21 @@ const DeviceManagementPage = () => {
   const searchTimer = useRef(null);
 
   // Modals state
+  const [addModal, setAddModal] = useState({ isOpen: false });
   const [editModal, setEditModal] = useState({ isOpen: false, device: null });
   const [assignModal, setAssignModal] = useState({ isOpen: false, device: null });
   const [lockModal, setLockModal] = useState({ isOpen: false, device: null });
   const [unassignModal, setUnassignModal] = useState({ isOpen: false, device: null });
-  const [alertModal, setAlertModal] = useState({ isOpen: false, type: 'success', message: '' });
+
+  // Toast notification (giống User Management)
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+
+  const showToast = (type, message) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ type, message });
+    toastTimer.current = setTimeout(() => setToast(null), 4000);
+  };
 
   useEffect(() => {
     fetchDevices();
@@ -50,7 +59,7 @@ const DeviceManagementPage = () => {
       setTotal(response.total || 0);
     } catch (error) {
       console.error('Failed to fetch devices:', error);
-      showAlert('error', 'Không thể tải danh sách thiết bị');
+      showToast('error', 'Không thể tải danh sách thiết bị');
     } finally {
       setLoading(false);
     }
@@ -70,8 +79,23 @@ const DeviceManagementPage = () => {
     }, 400);
   };
 
-  const showAlert = (type, message) => {
-    setAlertModal({ isOpen: true, type, message });
+  // ── Add Device ────────────────────────────────────────
+  const handleAdd = () => {
+    setAddModal({ isOpen: true });
+  };
+
+  const handleAddSubmit = async (formData) => {
+    try {
+      const response = await deviceService.createDevice(formData);
+      const newDevice = response.data;
+      setDevices((prev) => [newDevice, ...prev]);
+      setTotal((prev) => prev + 1);
+      showToast('success', 'Thêm thiết bị thành công');
+    } catch (error) {
+      console.error('Add error:', error);
+      showToast('error', error.message || 'Không thể thêm thiết bị');
+      throw error;
+    }
   };
 
   // ── Edit Device ──────────────────────────────────────
@@ -84,10 +108,10 @@ const DeviceManagementPage = () => {
       const response = await deviceService.updateDevice(editModal.device.id, formData);
       const updatedDevice = response.data;
       setDevices((prev) => prev.map((d) => (d.id === updatedDevice.id ? updatedDevice : d)));
-      showAlert('success', 'Cập nhật thiết bị thành công');
+      showToast('success', 'Cập nhật thiết bị thành công');
     } catch (error) {
       console.error('Update error:', error);
-      showAlert('error', error.message || 'Không thể cập nhật thiết bị');
+      showToast('error', error.message || 'Không thể cập nhật thiết bị');
       throw error;
     }
   };
@@ -102,10 +126,10 @@ const DeviceManagementPage = () => {
       const response = await deviceService.assignDevice(assignModal.device.id, userId);
       const updatedDevice = response.data;
       setDevices((prev) => prev.map((d) => (d.id === updatedDevice.id ? updatedDevice : d)));
-      showAlert('success', 'Đã gán thiết bị cho người dùng');
+      showToast('success', 'Đã gán thiết bị cho người dùng');
     } catch (error) {
       console.error('Assign error:', error);
-      showAlert('error', error.message || 'Không thể gán thiết bị');
+      showToast('error', error.message || 'Không thể gán thiết bị');
       throw error;
     }
   };
@@ -126,11 +150,11 @@ const DeviceManagementPage = () => {
       const updatedDevice = response.data;
       setDevices((prev) => prev.map((d) => (d.id === updatedDevice.id ? updatedDevice : d)));
       setUnassignModal({ isOpen: false, device: null });
-      showAlert('success', 'Đã bỏ gán thiết bị');
+      showToast('success', 'Đã bỏ gán thiết bị');
     } catch (error) {
       console.error('Unassign error:', error);
       setUnassignModal({ isOpen: false, device: null });
-      showAlert('error', error.message || 'Không thể bỏ gán thiết bị');
+      showToast('error', error.message || 'Không thể bỏ gán thiết bị');
     }
   };
 
@@ -146,86 +170,115 @@ const DeviceManagementPage = () => {
       setDevices((prev) => prev.map((d) => (d.id === updatedDevice.id ? updatedDevice : d)));
       setLockModal({ isOpen: false, device: null });
       const message = updatedDevice.is_active ? 'Đã mở khóa thiết bị' : 'Đã khóa thiết bị';
-      showAlert('success', message);
+      showToast('success', message);
     } catch (error) {
       console.error('Lock error:', error);
       setLockModal({ isOpen: false, device: null });
-      showAlert('error', error.message || 'Không thể thay đổi trạng thái thiết bị');
+      showToast('error', error.message || 'Không thể thay đổi trạng thái thiết bị');
     }
   };
 
   return (
-    <div className="p-8">
-      {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
-              <Smartphone size={24} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-800">Quản lý thiết bị IoT</h1>
-              <p className="text-sm text-slate-500 mt-1">Quản lý danh sách thiết bị trong hệ thống</p>
-            </div>
-          </div>
+    <div className="max-w-[1400px] mx-auto space-y-10 animate-in fade-in duration-700">
+      {/* Toast notification */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-bold animate-in slide-in-from-bottom-2 duration-300 border ${
+          toast.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-emerald-200/50' : 'bg-rose-50 text-rose-700 border-rose-200 shadow-rose-200/50'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+          {toast.message}
+          <button onClick={() => setToast(null)} className="ml-2 p-0.5 rounded-lg hover:bg-white/50 transition-colors">
+            <X size={14} />
+          </button>
         </div>
+      )}
 
-        {/* Toolbar */}
-        <DevicesToolbar
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onSearchChange={handleSearchChange}
-          searchInput={searchInput}
-        />
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-100 pb-8">
+        <div>
+          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý thiết bị IoT</h2>
+          <p className="text-slate-500 font-medium mt-2">
+            Hệ thống hiện đang vận hành với <span className="text-indigo-600 font-bold">{total}</span> thiết bị.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => fetchDevices()}
+            disabled={loading}
+            className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all active:scale-95 cursor-pointer border border-transparent hover:border-indigo-100"
+            title="Làm mới"
+          >
+            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+          </button>
+          <button
+            onClick={handleAdd}
+            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/20 transition-all active:scale-95 cursor-pointer shrink-0"
+          >
+            <Plus size={18} />
+            Thêm thiết bị mới
+          </button>
+        </div>
+      </div>
 
-        {/* Table */}
-        <DevicesTable
-          devices={devices}
-          loading={loading}
-          filters={filters}
-          onEdit={handleEdit}
-          onLock={handleLock}
-          onAssign={handleAssign}
-          onUnassign={handleUnassign}
-        />
+      {/* Toolbar */}
+      <DevicesToolbar
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onSearchChange={handleSearchChange}
+        searchInput={searchInput}
+      />
 
-        {/* Pagination */}
-        <DevicesPagination page={page} limit={limit} total={total} onPageChange={setPage} />
+      {/* Table */}
+      <DevicesTable
+        devices={devices}
+        loading={loading}
+        filters={filters}
+        onEdit={handleEdit}
+        onLock={handleLock}
+        onAssign={handleAssign}
+        onUnassign={handleUnassign}
+      />
 
-        {/* Modals */}
-        <DeviceFormModal
-          isOpen={editModal.isOpen}
-          onClose={() => setEditModal({ isOpen: false, device: null })}
-          device={editModal.device}
-          onSubmit={handleEditSubmit}
-        />
+      {/* Pagination */}
+      <DevicesPagination page={page} limit={limit} total={total} onPageChange={setPage} />
 
-        <AssignDeviceModal
-          isOpen={assignModal.isOpen}
-          onClose={() => setAssignModal({ isOpen: false, device: null })}
-          device={assignModal.device}
-          onSubmit={handleAssignSubmit}
-        />
+      {/* Modals */}
+      <DeviceFormModal
+        isOpen={addModal.isOpen}
+        onClose={() => setAddModal({ isOpen: false })}
+        device={null}
+        onSubmit={handleAddSubmit}
+        mode="add"
+      />
 
-        <LockDeviceModal
-          isOpen={lockModal.isOpen}
-          onClose={() => setLockModal({ isOpen: false, device: null })}
-          device={lockModal.device}
-          onConfirm={handleLockConfirm}
-        />
+      <DeviceFormModal
+        isOpen={editModal.isOpen}
+        onClose={() => setEditModal({ isOpen: false, device: null })}
+        device={editModal.device}
+        onSubmit={handleEditSubmit}
+        mode="edit"
+      />
 
-        <UnassignDeviceModal
-          isOpen={unassignModal.isOpen}
-          onClose={() => setUnassignModal({ isOpen: false, device: null })}
-          device={unassignModal.device}
-          onConfirm={handleUnassignConfirm}
-        />
+      <AssignDeviceModal
+        isOpen={assignModal.isOpen}
+        onClose={() => setAssignModal({ isOpen: false, device: null })}
+        device={assignModal.device}
+        onSubmit={handleAssignSubmit}
+      />
 
-        <AlertModal
-          isOpen={alertModal.isOpen}
-          onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
-          type={alertModal.type}
-          message={alertModal.message}
-        />
+      <LockDeviceModal
+        isOpen={lockModal.isOpen}
+        onClose={() => setLockModal({ isOpen: false, device: null })}
+        device={lockModal.device}
+        onConfirm={handleLockConfirm}
+      />
+
+      <UnassignDeviceModal
+        isOpen={unassignModal.isOpen}
+        onClose={() => setUnassignModal({ isOpen: false, device: null })}
+        device={unassignModal.device}
+        onConfirm={handleUnassignConfirm}
+      />
     </div>
   );
 };

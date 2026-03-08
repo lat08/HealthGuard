@@ -33,6 +33,27 @@ const DEVICE_SELECT_FIELDS = {
  */
 const deviceService = {
   /**
+   * Tạo thiết bị mới
+   */
+  async create(data) {
+    const device = await prisma.devices.create({
+      data: {
+        device_name: data.device_name,
+        device_type: data.device_type,
+        model: data.model || null,
+        firmware_version: data.firmware_version || null,
+        serial_number: data.serial_number,
+        mac_address: data.mac_address,
+        is_active: true,
+        registered_at: new Date(),
+      },
+      select: DEVICE_SELECT_FIELDS,
+    });
+
+    return device;
+  },
+
+  /**
    * Lấy danh sách thiết bị có phân trang, filter, search
    */
   async findAll({ page = 1, limit = 20, is_active, has_owner, search, device_type }) {

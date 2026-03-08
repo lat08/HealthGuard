@@ -7,6 +7,12 @@ const deviceService = require('../services/device.service');
  * Gọi service → trả ApiResponse
  */
 const deviceController = {
+  // POST /api/v1/devices — Tạo thiết bị mới
+  create: catchAsync(async (req, res) => {
+    const device = await deviceService.create(req.body);
+    ApiResponse.success(res, device, 'Tạo thiết bị thành công', 201);
+  }),
+
   // GET /api/v1/devices — Danh sách thiết bị (paginated, filtered)
   getAll: catchAsync(async (req, res) => {
     const { page, limit, is_active, has_owner, search, device_type } = req.query;

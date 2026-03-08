@@ -44,28 +44,25 @@ const DevicesTable = ({ devices, loading, filters, onEdit, onLock, onAssign, onU
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[1200px]">
+        <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/50 border-b border-slate-100">
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-16 text-center">
+              <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-12 text-center">
                 ID
               </th>
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest min-w-[240px]">
+              <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 Thiết bị
               </th>
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest min-w-[200px]">
+              <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 Chủ sở hữu
               </th>
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center w-32">
+              <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center w-28">
                 Loại
               </th>
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-48">
+              <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center w-32">
                 Trạng thái
               </th>
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-48">
-                Lần cuối online
-              </th>
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-48 text-center sticky right-0 bg-slate-50/90 backdrop-blur-sm z-10 border-l border-slate-100">
+              <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-36 text-center sticky right-0 bg-slate-50/90 backdrop-blur-sm z-10 border-l border-slate-100">
                 Thao tác
               </th>
             </tr>
@@ -73,7 +70,7 @@ const DevicesTable = ({ devices, loading, filters, onEdit, onLock, onAssign, onU
           <tbody className="divide-y divide-slate-50">
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-6 py-24 text-center">
+                <td colSpan={6} className="px-6 py-24 text-center">
                   <div className="flex flex-col items-center justify-center gap-4">
                     <Loader2 size={32} className="text-indigo-500 animate-spin" />
                     <p className="text-sm text-slate-400 font-medium">Đang tải danh sách...</p>
@@ -82,7 +79,7 @@ const DevicesTable = ({ devices, loading, filters, onEdit, onLock, onAssign, onU
               </tr>
             ) : devices.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-24 text-center">
+                <td colSpan={6} className="px-6 py-24 text-center">
                   <div className="flex flex-col items-center justify-center gap-4">
                     <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200">
                       <Smartphone size={32} />
@@ -99,10 +96,10 @@ const DevicesTable = ({ devices, loading, filters, onEdit, onLock, onAssign, onU
             ) : (
               devices.map((device) => (
                 <tr key={device.id} className="hover:bg-slate-50/30 transition-all duration-200 group">
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-4 py-4 text-center">
                     <span className="text-[11px] font-bold text-slate-300 font-mono">#{device.id}</span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 shrink-0">
                         <Smartphone size={18} />
@@ -111,19 +108,13 @@ const DevicesTable = ({ devices, loading, filters, onEdit, onLock, onAssign, onU
                         <p className="font-bold text-slate-800 text-sm truncate">
                           <HighlightText text={device.device_name || 'Chưa đặt tên'} keyword={filters.search} />
                         </p>
-                        <p className="text-[11px] text-slate-400 font-medium mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                        <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">
                           <HighlightText text={device.serial_number || '---'} keyword={filters.search} />
-                          {device.mac_address && (
-                            <>
-                              <span className="mx-1.5 text-slate-200">|</span>
-                              <HighlightText text={device.mac_address} keyword={filters.search} />
-                            </>
-                          )}
                         </p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-4">
                     {device.users ? (
                       <div className="min-w-0">
                         <p className="font-bold text-slate-800 text-sm truncate">
@@ -137,19 +128,19 @@ const DevicesTable = ({ devices, loading, filters, onEdit, onLock, onAssign, onU
                       <span className="text-xs text-slate-400 italic">Chưa có chủ</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-4 py-4 text-center">
                     <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border whitespace-nowrap ${
+                      className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
                         DEVICE_TYPE_COLORS[device.device_type] || DEVICE_TYPE_COLORS.other
                       }`}
                     >
                       {DEVICE_TYPE_LABELS[device.device_type] || device.device_type}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="space-y-2">
+                  <td className="px-4 py-4 text-center">
+                    <div className="flex flex-col items-center gap-2">
                       <div
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap ${
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold whitespace-nowrap ${
                           device.is_active
                             ? 'text-emerald-600 bg-emerald-50/50'
                             : 'text-rose-600 bg-rose-50/50'
@@ -162,18 +153,18 @@ const DevicesTable = ({ devices, loading, filters, onEdit, onLock, onAssign, onU
                         ></span>
                         {device.is_active ? 'Hoạt động' : 'Đã khóa'}
                       </div>
-                      <div className="flex items-center gap-3 text-[11px]">
+                      <div className="flex items-center gap-2 text-[10px]">
                         {device.battery_level !== null && (
-                          <div className="flex items-center gap-1">
-                            <Battery size={12} className={getBatteryColor(device.battery_level)} />
+                          <div className="flex items-center gap-0.5">
+                            <Battery size={11} className={getBatteryColor(device.battery_level)} />
                             <span className={`font-bold ${getBatteryColor(device.battery_level)}`}>
                               {device.battery_level}%
                             </span>
                           </div>
                         )}
                         {device.signal_strength !== null && (
-                          <div className="flex items-center gap-1">
-                            <Signal size={12} className={getSignalColor(device.signal_strength)} />
+                          <div className="flex items-center gap-0.5">
+                            <Signal size={11} className={getSignalColor(device.signal_strength)} />
                             <span className={`font-bold ${getSignalColor(device.signal_strength)}`}>
                               {device.signal_strength}%
                             </span>
@@ -182,13 +173,7 @@ const DevicesTable = ({ devices, loading, filters, onEdit, onLock, onAssign, onU
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                      <Clock size={12} className="text-slate-300 shrink-0" />
-                      <span className="font-medium">{formatDate(device.last_seen_at)}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-center sticky right-0 bg-white/90 backdrop-blur-sm z-10 border-l border-slate-50 group-hover:bg-slate-50/90 transition-colors shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)]">
+                  <td className="px-4 py-4 text-center sticky right-0 bg-white/90 backdrop-blur-sm z-10 border-l border-slate-50 group-hover:bg-slate-50/90 transition-colors shadow-[-4px_0_12px_-4px_rgba(0,0,0,0.05)]">
                     <div className="flex items-center justify-center gap-1.5">
                       <button
                         onClick={() => onEdit(device)}
