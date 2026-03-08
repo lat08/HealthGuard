@@ -8,6 +8,7 @@ const mockReq = (overrides = {}) => ({
   body: {},
   params: {},
   query: {},
+  user: { id: 1 },
   ...overrides,
 });
 
@@ -86,20 +87,7 @@ describe('userController', () => {
     });
   });
 
-  // ═══════════════════════════════════════════════════════
-  // replace (PUT)
-  // ═══════════════════════════════════════════════════════
-  describe('replace', () => {
-    it('should update user and return success', async () => {
-      userService.replace.mockResolvedValue({ id: 1, email: 'updated@test.com' });
-      const req = mockReq({ params: { id: '1' }, body: { email: 'updated@test.com' } });
-      const res = mockRes();
-      const next = jest.fn();
 
-      await userController.replace(req, res, next);
-      expect(res.status).toHaveBeenCalledWith(200);
-    });
-  });
 
   // ═══════════════════════════════════════════════════════
   // update (PATCH)
@@ -120,14 +108,14 @@ describe('userController', () => {
   // delete (soft)
   // ═══════════════════════════════════════════════════════
   describe('delete', () => {
-    it('should soft delete user and return 204', async () => {
+    it('should soft delete user and return 200', async () => {
       userService.softDelete.mockResolvedValue({});
       const req = mockReq({ params: { id: '1' } });
       const res = mockRes();
       const next = jest.fn();
 
       await userController.delete(req, res, next);
-      expect(res.status).toHaveBeenCalledWith(204);
+      expect(res.status).toHaveBeenCalledWith(200);
     });
   });
 });

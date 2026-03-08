@@ -1,4 +1,5 @@
 const ApiError = require('../utils/ApiError');
+const sanitizeHtml = require('sanitize-html');
 
 /**
  * Request validation middleware.
@@ -10,8 +11,8 @@ const ApiError = require('../utils/ApiError');
  * Rules format:
  *   {
  *     body: {
- *       email:     { required: true, type: 'string' },
- *       full_name: { required: true, type: 'string' },
+ *       email:     { required: true, type: 'string', pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
+ *       full_name: { required: true, type: 'string', sanitize: true },
  *       role:      { required: false, type: 'string', enum: ['patient','caregiver','admin'] },
  *     }
  *   }
@@ -26,7 +27,7 @@ const validate = (rules) => (req, _res, next) => {
     const fields = rules[source];
 
     for (const [field, rule] of Object.entries(fields)) {
-      const value = data[field];
+      let value = data[field];
 
       // Required check
       if (rule.required && (value === undefined || value === null || value === '')) {
@@ -35,11 +36,26 @@ const validate = (rules) => (req, _res, next) => {
       }
 
       // Skip optional fields that are not provided
-      if (value === undefined || value === null) continue;
+      if (value === undefined || value === null || value === '') continue;
 
       // Type check
       if (rule.type && typeof value !== rule.type) {
         errors.push({ field, message: `${field} phải có kiểu ${rule.type}` });
+        continue;
+      }
+
+      // Sanitize string if requested
+      if (rule.sanitize && typeof value === 'string') {
+        value = sanitizeHtml(value, {
+          allowedTags: [],
+          allowedAttributes: {}
+        }).trim();
+        req[source][field] = value;
+      }
+
+      // Pattern check (Regex)
+      if (rule.pattern && typeof value === 'string' && !rule.pattern.test(value)) {
+        errors.push({ field, message: `${field} không đúng định dạng` });
       }
 
       // Enum check

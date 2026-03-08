@@ -353,3 +353,17 @@ model vitals {
   @@index([signal_quality], map: "idx_vitals_quality")
   @@index([time(sort: Desc)])
 }
+
+model users_archive {
+  id              Int       @id @default(autoincrement())
+  original_id     Int
+  uuid            String    @db.Uuid
+  email           String    @db.VarChar(255)
+  user_data       Json
+  archived_at     DateTime? @default(now()) @db.Timestamptz(6)
+  archived_by     Int?
+
+  @@index([original_id], map: "idx_users_archive_original_id")
+  @@index([email], map: "idx_users_archive_email")
+}
+

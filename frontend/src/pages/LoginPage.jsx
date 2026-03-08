@@ -67,7 +67,14 @@ const LoginPage = ({ onLoginSuccess }) => {
       if (result.success) {
         onLoginSuccess();
       } else {
-        setApiError(result.error);
+        // Map backend response { success, statusCode, message } → UI error { code, message }
+        const code =
+          result.statusCode === 423 ? 'ACCOUNT_LOCKED' :
+          result.statusCode === 429 ? 'TOO_MANY_REQUESTS' :
+          result.statusCode === 401 ? 'INVALID_CREDENTIALS' :
+          result.statusCode === 403 ? 'ACCOUNT_NOT_VERIFIED' :
+          'INTERNAL_ERROR';
+        setApiError({ code, message: result.message || 'Có lỗi xảy ra' });
       }
     } catch {
       setApiError({
@@ -151,6 +158,8 @@ const LoginPage = ({ onLoginSuccess }) => {
                 <p className="font-bold text-sm tracking-tight">{
                   apiError.code === 'ACCOUNT_LOCKED' ? 'Tài khoản đã bị khóa' :
                   apiError.code === 'TOO_MANY_REQUESTS' ? 'Yêu cầu quá giới hạn' :
+                  apiError.code === 'INVALID_CREDENTIALS' ? 'Đăng nhập thất bại' :
+                  apiError.code === 'ACCOUNT_NOT_VERIFIED' ? 'Tài khoản chưa xác thực' :
                   'Có lỗi xảy ra'
                 }</p>
                 <p className="mt-1 text-sm font-medium opacity-80 leading-relaxed">{getErrorMessage(apiError)}</p>
